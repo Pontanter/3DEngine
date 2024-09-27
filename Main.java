@@ -13,6 +13,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
+import java.time.Instant;
+
 class Main extends JFrame implements KeyListener {
     private JPanel panel;
 
@@ -50,6 +52,8 @@ class Main extends JFrame implements KeyListener {
     private double height = H;
 
     Main() {
+        double loadingStartTime = Instant.now().toEpochMilli();
+        System.out.println("Begin loading faces");
         for (int y = 0; y < (int) tileFloor.Y; y++)
             for (int x = 0; x < (int) tileFloor.X; x++)
                 faces.add(new Face(
@@ -64,9 +68,10 @@ class Main extends JFrame implements KeyListener {
                     0
                 ));
         Vector3 cubeOrigin = new Vector3(tileSize*tileFloor.X*.5, .25, 0);
-        Vector3 sphereOrigin0 = cubeOrigin.add(new Vector3(.25, 0, 0));
-        Vector3 sphereOrigin1 = sphereOrigin0.add(new Vector3(.25, 0, 0));
-        Vector3 sphereOrigin2 = sphereOrigin1.add(new Vector3(.25, 0, 0));
+        Vector3 cylinderOrigin0 = cubeOrigin.add(new Vector3(.25, 0, 0));
+        Vector3 cylinderOrigin1 = cylinderOrigin0.add(new Vector3(.25, 0, 0));
+        Vector3 cylinderOrigin2 = cylinderOrigin1.add(new Vector3(.25, 0, 0));
+        Vector3 sphereOrigin = cylinderOrigin2.add(new Vector3(.25, 0, 0));
         faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
@@ -136,10 +141,10 @@ class Main extends JFrame implements KeyListener {
         for (int i = 0; i < 360; i++)
             faces.add(new Face(
                 new Vector3[] {
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
-                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
-                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 0).add(sphereOrigin0)
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
+                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
+                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0)
                 },
                 Color.RED,
                 viewport,
@@ -148,10 +153,10 @@ class Main extends JFrame implements KeyListener {
         for (int i = 0; i < 360; i++)
             faces.add(new Face(
                 new Vector3[] {
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
-                    new Vector3(.05, -.05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
-                    new Vector3(-.05, -.05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1)
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
+                    new Vector3(.05, -.05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
+                    new Vector3(-.05, -.05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1)
                 },
                 Color.GREEN,
                 viewport,
@@ -160,15 +165,29 @@ class Main extends JFrame implements KeyListener {
         for (int i = 0; i < 360; i++)
             faces.add(new Face(
                 new Vector3[] {
-                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
-                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 2).add(sphereOrigin2)
+                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
+                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2)
                 },
                 Color.BLUE,
                 viewport,
                 4
             ));
+        int sphereDecimate = 1;
+        for (int i = 0; i < 360/sphereDecimate; i+=sphereDecimate) {
+            Vector3[] verticies = new Vector3[360/sphereDecimate];
+            for (int j = 0; j < 360/sphereDecimate; j++)
+                verticies[j] = new Vector3(0, 0, .05).rotate(Math.toRadians(j*sphereDecimate), 1).rotate(Math.toRadians(i), 0).add(sphereOrigin);
+            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
+        }
+        hiddenGroupIDs.add(5);
+        for (Face face : faces)
+            face.noDisplayableOverride = hiddenGroupIDs.contains(face.ID);
+        int totalVerticies = 0;
+        for (Face face : faces)
+            totalVerticies += face.verticies3D.length;
+        System.out.println("Successfully loaded "+faces.size()+" faces and "+totalVerticies+" vertices in "+(Instant.now().toEpochMilli()-loadingStartTime)+"ms");
         panel = new JPanel() {
             @Override
             public void paint(Graphics g) {
@@ -183,14 +202,14 @@ class Main extends JFrame implements KeyListener {
                     double distanceToCamera = Math.sqrt(
                         Math.pow(face.origin.X - viewport.position.X, 2) + 
                         Math.pow(face.origin.Y - viewport.position.Y, 2) + 
-                        Math.pow((face.origin.Z + Face.warpCorrection) - viewport.position.Z, 2)
+                        Math.pow(face.origin.Z - viewport.position.Z, 2)
                     );
                     int i = 0;
                     while (i < sorted.length && sorted[i] != null) {
                         double sortedDistanceToCamera = Math.sqrt(
                             Math.pow(sorted[i].origin.X - viewport.position.X, 2) +
                             Math.pow(sorted[i].origin.Y - viewport.position.Y, 2) +
-                            Math.pow((sorted[i].origin.Z + Face.warpCorrection) - viewport.position.Z, 2)
+                            Math.pow(sorted[i].origin.Z - viewport.position.Z, 2)
                         );
                         if (distanceToCamera > sortedDistanceToCamera) {
                             break;
