@@ -14,6 +14,7 @@ public class Vector2 {
     public double magnitude() { return Math.sqrt(X * X + Y * Y); }
     public double lookAt(Vector2 point) { return Math.atan2(point.sub(this).Y, point.sub(this).X ); }
     public double dot(Vector2 other) { return X * other.X + Y * other.Y; }
+    public Vector3 extend() { return new Vector3(X, 0, Y); }
     public Vector2 unit() { return div(magnitude()); }
     public Vector2 clone() { return new Vector2(X, Y); }
     public Vector2 move(Vector2 amt, double angle) { return add(amt.rotate(angle)); }

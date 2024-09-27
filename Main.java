@@ -278,7 +278,7 @@ class Main extends JFrame implements KeyListener {
             // case KeyEvent.VK_DOWN: DOWN = true; break;
             
             case KeyEvent.VK_CONTROL: if (jumps < 2) break; Crouch = !Crouch; break;
-            case KeyEvent.VK_Q: velocity.Z += W&&S?0:S?1:W?-1:0; break;
+            case KeyEvent.VK_Q: velocity = velocity.add(new Vector3(D&&A?0:A?1:D?-1:0, 0, W&&S?0:S?1:W?-1:0)); break;
             case KeyEvent.VK_SPACE: if (jumps < 1) break; Crouch = false; velocity.Y = velocity.Y < 0? -.025 : velocity.Y - .025; jumps--; break;
         }
     }
