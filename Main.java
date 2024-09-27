@@ -175,10 +175,22 @@ class Main extends JFrame implements KeyListener {
                 4
             ));
         int sphereDecimate = 1;
-        for (int i = 0; i < 360/sphereDecimate; i+=sphereDecimate) {
+        for (int i = 0; i < 360; i+=sphereDecimate) {
             Vector3[] verticies = new Vector3[360/sphereDecimate];
             for (int j = 0; j < 360/sphereDecimate; j++)
                 verticies[j] = new Vector3(0, 0, .05).rotate(Math.toRadians(j*sphereDecimate), 1).rotate(Math.toRadians(i), 0).add(sphereOrigin);
+            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
+        }
+        for (int i = 0; i < 360; i+=sphereDecimate) {
+            Vector3[] verticies = new Vector3[360/sphereDecimate];
+            for (int j = 0; j < 360/sphereDecimate; j++)
+                verticies[j] = new Vector3(0, 0, .05).rotate(Math.toRadians(j*sphereDecimate), 1).rotate(Math.toRadians(i), 0).rotate(Math.PI/2, 1).add(sphereOrigin);
+            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
+        }
+        for (int i = 0; i < 360; i+=sphereDecimate) {
+            Vector3[] verticies = new Vector3[360/sphereDecimate];
+            for (int j = 0; j < 360/sphereDecimate; j++)
+                verticies[j] = new Vector3(0, .05, 0).rotate(Math.toRadians(j*sphereDecimate), 0).rotate(Math.toRadians(i), 1).add(sphereOrigin);
             faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
         }
         hiddenGroupIDs.add(5);
