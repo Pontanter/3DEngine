@@ -2,6 +2,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 import javax.swing.JOptionPane;
+import javax.swing.JDialog;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -14,6 +15,8 @@ import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
 import java.time.Instant;
+
+import java.io.File;
 
 class Main extends JFrame implements KeyListener {
     private JPanel panel;
@@ -43,9 +46,11 @@ class Main extends JFrame implements KeyListener {
     private double tileSize = .1;
 
     private ArrayList<Integer> hiddenGroupIDs = new ArrayList<Integer>();
-    
+
     private Vector3 velocity = new Vector3();
     private Viewport viewport = new Viewport(new Vector3(tileSize*tileFloor.X*.5, 1, tileSize*tileFloor.Y*.5), new Vector3(), res, scalar);
+
+    private int loadedMeshes = 0;
 
     private double leanZ;
     private double H = .25;
@@ -174,7 +179,7 @@ class Main extends JFrame implements KeyListener {
                 viewport,
                 4
             ));
-        int sphereDecimate = 1;
+        int sphereDecimate = 10;
         for (int i = 0; i < 360; i+=sphereDecimate) {
             Vector3[] verticies = new Vector3[360/sphereDecimate];
             for (int j = 0; j < 360/sphereDecimate; j++)
@@ -254,12 +259,9 @@ class Main extends JFrame implements KeyListener {
                 g2D.drawString("FPS: "+FPS, 10, 30);
                 if (debug) {
                     for (Face face : sorted)
-                        if (face != null) {
-                            Vector2 origin = face.projectedOrigin;
-                            g2D.fillOval((int)origin.X-s/2, (int)origin.Y-s/2, s, s);
+                        if (face != null)
                             for (Vector2 vertex : face.verticies)
                                 g2D.fillOval((int)vertex.X-s/2, (int)vertex.Y-s/2, s, s);
-                        }
                     g2D.drawString("Delta: "+delta, 10, 60);
                     g2D.drawString("Wireframe mode "+(wireframe?"on":"off"), 10, 90);
                     g2D.drawString("Ghost mode "+(ghost?"on":"off"), 10, 120);
@@ -355,6 +357,26 @@ class Main extends JFrame implements KeyListener {
             }
     }
 
+    private void importMesh() {
+        String response = JOptionPane.showInputDialog(null, "Enter file path", "Import Mesh", JOptionPane.QUESTION_MESSAGE);
+        File file = new File(response);
+        if (response == null || !file.exists() || file.isDirectory())
+            JOptionPane.showMessageDialog(null, "Invalid file path", "Import Mesh", JOptionPane.ERROR_MESSAGE);
+        else {
+            JOptionPane optionPane = new JOptionPane("Loading"+response, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[] {}, null);
+            JDialog dialog = optionPane.createDialog("Import Mesh");
+            dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            dialog.setModal(false);
+            dialog.setVisible(true);
+            Mesh mesh = new Mesh(response, viewport.position, viewport.rotation, new Color(255, 255, 255), viewport, 6+loadedMeshes, .5);
+            loadedMeshes++;
+            for (Face face : mesh.faces)
+                faces.add(face);
+            System.out.println("Imported "+response+" to scene");
+            dialog.dispose();
+        }
+    }
+
     public static void main(String[] args) {
         new Main();
     }
@@ -372,6 +394,7 @@ class Main extends JFrame implements KeyListener {
             case KeyEvent.VK_X: ghost = !ghost; break;
             case KeyEvent.VK_R: viewport = new Viewport(new Vector3(), new Vector3(), res, scalar); break;
             case KeyEvent.VK_C: doGroupIDToggle(); break;
+            case KeyEvent.VK_V: importMesh(); break;
 
             case KeyEvent.VK_W: W = true; break;
             case KeyEvent.VK_A: A = true; break;

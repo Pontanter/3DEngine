@@ -35,4 +35,16 @@ public class Vector3 {
         for (Vector3 v : verticies) origin = origin.add(v);
         return origin.div(verticies.length);
     }
+
+    public static Vector3 pack(String s, String regex) {
+        String[] split = s.split(regex);
+        try {
+            return new Vector3(Double.parseDouble(split[0]), Double.parseDouble(split[1]), Double.parseDouble(split[2]));
+        } catch (Exception e) {
+            System.out.println("Unable to create vector: malformed vector data");
+            return new Vector3();
+        }
+    }
+
+    public static Vector3 pack(String s) { return pack(s, " "); }
 }

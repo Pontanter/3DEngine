@@ -12,3 +12,4 @@
  * **Z** - **Toggle wireframe rendering**
  * **X** - **Toggle transparent rendering (LAGGY)**
  * **C** - **Open face toggle dialog** (Enter a number corresponding to a group ID to toggle it.)
+ * **V** - **Open mesh importing dialog** (Only works with OBJ!)
