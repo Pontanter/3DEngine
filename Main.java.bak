@@ -1,0 +1,228 @@
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
+class Main extends JFrame implements KeyListener {
+    private JPanel panel;
+
+    private int frame_c;
+    private int FPS;
+    private double delta;
+
+    private double spinSpeed = 0.01;
+
+    private Vector2 res = new Vector2(1920, 1080);
+
+    private int scalar = 5;
+
+    private boolean debug = true;
+    private boolean wireframe = false;
+    private boolean ghost = false;
+    private int s = 5;
+
+    private boolean W,A,S,D,Q,E,RIGHT,LEFT,UP,DOWN;
+
+    private Viewport viewport = new Viewport(new Vector3(), new Vector3(), res, scalar);
+
+    private Vector3[] face0_verticies = {
+        new Vector3(0, -1, 0),
+        new Vector3(-1, 1, 1),
+        new Vector3(1, 1, 1)
+    };
+
+    private Vector3[] face1_verticies = {
+        new Vector3(0, -1, 0),
+        new Vector3(1, 1, -1),
+        new Vector3(1, 1, 1)
+    };
+
+    private Vector3[] face2_verticies = {
+        new Vector3(0, -1, 0),
+        new Vector3(-1, 1, 1),
+        new Vector3(-1, 1, -1)
+    };
+
+    private Vector3[] face3_verticies = {
+        new Vector3(0, -1, 0),
+        new Vector3(-1, 1, -1),
+        new Vector3(1, 1, -1)
+    };
+    
+    Color face0Color = Color.BLUE, face1Color = Color.GREEN, face2Color = Color.YELLOW, face3Color = Color.RED;
+
+    Main() {
+        panel = new JPanel() {
+            @Override
+            public void paint(Graphics g) {
+                Graphics2D g2D = (Graphics2D) g;
+                g2D.setColor(Color.BLACK);
+                g2D.fillRect(0, 0, getWidth(), getHeight());
+                Face face0 = new Face(face0_verticies, Color.BLUE, viewport);
+                Face face1 = new Face(face1_verticies, Color.GREEN, viewport);
+                Face face2 = new Face(face2_verticies, Color.YELLOW, viewport);
+                Face face3 = new Face(face3_verticies, Color.RED, viewport);
+                Face[] faces = { face0, face1, face2, face3 };
+                Face[] sorted = new Face[faces.length];
+                // for (Face face : faces) { /* old layering code for static camera */
+                //     if (!face.displayable) continue;
+                //     int i = 0;
+                //     while (i < sorted.length && sorted[i] != null && face.origin.Z < sorted[i].origin.Z)
+                //         i++;
+                //     for (int j = sorted.length - 1; j > i; j--)
+                //         sorted[j] = sorted[j - 1];
+                //     sorted[i] = face;
+                // }
+                for (Face face : faces) {
+                    if (!face.displayable) continue;
+                    double distanceToCamera = Math.sqrt(
+                        Math.pow(face.origin.X - viewport.position.X, 2) + 
+                        Math.pow(face.origin.Y - viewport.position.Y, 2) + 
+                        Math.pow((face.origin.Z + Face.warpCorrection) - viewport.position.Z, 2)
+                    );
+                    int i = 0;
+                    while (i < sorted.length && sorted[i] != null) {
+                        double sortedDistanceToCamera = Math.sqrt(
+                            Math.pow(sorted[i].origin.X - viewport.position.X, 2) +
+                            Math.pow(sorted[i].origin.Y - viewport.position.Y, 2) +
+                            Math.pow((sorted[i].origin.Z + Face.warpCorrection) - viewport.position.Z, 2)
+                        );
+                        if (distanceToCamera > sortedDistanceToCamera) {
+                            break;
+                        }
+                        i++;
+                    }
+                    for (int j = sorted.length - 1; j > i; j--)
+                        sorted[j] = sorted[j - 1];
+                    sorted[i] = face;
+                }
+                for (Face face : sorted)
+                    if (face != null) {
+                        g2D.setColor(face.color);
+                        if (ghost)
+                            g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .5f));
+                        if (wireframe) {
+                            g2D.setStroke(new BasicStroke(2));
+                            g2D.drawPolygon(face.face);
+                        } else
+                            g2D.fillPolygon(face.face);
+                        if (ghost)
+                            g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
+                    }
+                if (debug) {
+                    g2D.setColor(Color.WHITE);
+                    for (Face face : sorted)
+                        if (face != null) {
+                            Vector2 origin = face.projectedOrigin;
+                            g2D.fillOval((int)origin.X-s/2, (int)origin.Y-s/2, s, s);
+                            for (Vector2 vertex : face.verticies)
+                                g2D.fillOval((int)vertex.X-s/2, (int)vertex.Y-s/2, s, s);
+                        }
+                    g2D.setFont(new Font("Consolas", Font.PLAIN, 20));
+                    g2D.drawString("FPS: "+FPS, 10, 30);
+                    g2D.drawString("Rotation speed: "+spinSpeed, 10, 60);
+                    g2D.drawString("Wireframe mode "+(wireframe?"on":"off"), 10, 90);
+                    g2D.drawString("Ghost mode "+(ghost?"on":"off"), 10, 120);
+                    g2D.drawString("Viewport position: "+viewport.position, 10, 150);
+                    g2D.drawString("Viewport rotation: "+viewport.rotation, 10, 180);
+                }
+                g2D.dispose();
+                g.dispose();
+            }
+        };
+
+        add(panel);
+        setUndecorated(true);
+        pack();
+        setTitle("3D Pyramid");
+        setSize(res.toDimension());
+        setResizable(false);
+        addKeyListener(this);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setExtendedState(MAXIMIZED_BOTH);
+        setVisible(true);
+
+        new Timer(1, e -> step()).start();
+        new Timer(1000, e -> { FPS = frame_c; delta = 1/FPS; frame_c = 0; setTitle("3D Engine - "+FPS+" FPS"); }).start();
+    }
+
+    private void step() {
+        for (int i = 0; i < face0_verticies.length; i++) {
+            double spd = spinSpeed;
+            face0_verticies[i] = face0_verticies[i].rotate(spd, 1);
+            face1_verticies[i] = face1_verticies[i].rotate(spd, 1);
+            face2_verticies[i] = face2_verticies[i].rotate(spd, 1);
+            face3_verticies[i] = face3_verticies[i].rotate(spd, 1);
+        }
+        viewport.rotate(new Vector3(
+            0, // ((DOWN?.45:0)-(UP?.45:0)),
+            (LEFT?.45:0)-(RIGHT?.45:0),
+            0
+        ).mul(.1));
+        viewport.move(new Vector3(
+            (D?1:0)-(A?1:0),
+            (Q?1:0)-(E?1:0),
+            (W?1:0)-(S?1:0)
+        ).mul(.1).rotate(viewport.rotation.mul(-1)));
+        panel.repaint();
+        frame_c++;
+    }
+
+    public static void main(String[] args) {
+        new Main();
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {}
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        int k = e.getKeyCode();
+        switch(k) {
+            case KeyEvent.VK_ESCAPE: System.exit(0); break;
+            case KeyEvent.VK_F1: debug = !debug; break;
+            case KeyEvent.VK_Z: wireframe = !wireframe; break;
+            case KeyEvent.VK_X: ghost = !ghost; break;
+            case KeyEvent.VK_PERIOD: spinSpeed += 0.005; break;
+            case KeyEvent.VK_COMMA: spinSpeed -= 0.005; break;
+            case KeyEvent.VK_R: spinSpeed = 0.01; viewport = new Viewport(new Vector3(), new Vector3(), res, scalar); break;
+
+            case KeyEvent.VK_W: W = true; break;
+            case KeyEvent.VK_A: A = true; break;
+            case KeyEvent.VK_S: S = true; break;
+            case KeyEvent.VK_D: D = true; break;
+            case KeyEvent.VK_Q: Q = true; break;
+            case KeyEvent.VK_E: E = true; break;
+            case KeyEvent.VK_RIGHT: RIGHT = true; break;
+            case KeyEvent.VK_LEFT: LEFT = true; break;
+            case KeyEvent.VK_UP: UP = true; break;
+            case KeyEvent.VK_DOWN: DOWN = true; break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        int k = e.getKeyCode();
+        switch(k) {
+            case KeyEvent.VK_W: W = false; break;
+            case KeyEvent.VK_A: A = false; break;
+            case KeyEvent.VK_S: S = false; break;
+            case KeyEvent.VK_D: D = false; break;
+            case KeyEvent.VK_Q: Q = false; break;
+            case KeyEvent.VK_E: E = false; break;
+            case KeyEvent.VK_RIGHT: RIGHT = false; break;
+            case KeyEvent.VK_LEFT: LEFT = false; break;
+            case KeyEvent.VK_UP: UP = false; break;
+            case KeyEvent.VK_DOWN: DOWN = false; break;
+        }
+    }
+}
