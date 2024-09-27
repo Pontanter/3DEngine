@@ -1,6 +1,7 @@
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import javax.swing.JOptionPane;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -10,6 +11,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
 
 class Main extends JFrame implements KeyListener {
     private JPanel panel;
@@ -34,9 +36,11 @@ class Main extends JFrame implements KeyListener {
     private boolean Crouch = false;
 
     private Vector2 tileFloor = new Vector2(50, 50);
-    private Face[] faces = new Face[(int)(tileFloor.X*tileFloor.Y)+8];
+    private ArrayList<Face> faces = new ArrayList<Face>();
 
     private double tileSize = .1;
+
+    private ArrayList<Integer> hiddenGroupIDs = new ArrayList<Integer>();
     
     private Vector3 velocity = new Vector3();
     private Viewport viewport = new Viewport(new Vector3(tileSize*tileFloor.X*.5, 1, tileSize*tileFloor.Y*.5), new Vector3(), res, scalar);
@@ -48,7 +52,7 @@ class Main extends JFrame implements KeyListener {
     Main() {
         for (int y = 0; y < (int) tileFloor.Y; y++)
             for (int x = 0; x < (int) tileFloor.X; x++)
-                faces[x + y * (int) tileFloor.X] = new Face(
+                faces.add(new Face(
                     new Vector3[] {
                         new Vector3(x*tileSize, 0, y*tileSize),
                         new Vector3(x*tileSize, 0, y*tileSize-tileSize),
@@ -56,10 +60,14 @@ class Main extends JFrame implements KeyListener {
                         new Vector3(x*tileSize-tileSize, 0, y*tileSize)
                     }, 
                     new Color(255, 255, 255),
-                    viewport
-                );
+                    viewport,
+                    0
+                ));
         Vector3 cubeOrigin = new Vector3(tileSize*tileFloor.X*.5, .25, 0);
-        faces[faces.length-8] = new Face(
+        Vector3 sphereOrigin0 = cubeOrigin.add(new Vector3(.25, 0, 0));
+        Vector3 sphereOrigin1 = sphereOrigin0.add(new Vector3(.25, 0, 0));
+        Vector3 sphereOrigin2 = sphereOrigin1.add(new Vector3(.25, 0, 0));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
                 new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
@@ -67,9 +75,10 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin)
             },
             Color.BLUE,
-            viewport
-        );
-        faces[faces.length-7] = new Face(
+            viewport,
+            1
+        ));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin),
                 new Vector3(.5, .5, -.5).mul(tileSize).add(cubeOrigin),
@@ -77,9 +86,10 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(-.5, -.5, -.5).mul(tileSize).add(cubeOrigin)
             },
             Color.BLUE,
-            viewport
-        );
-        faces[faces.length-6] = new Face(
+            viewport,
+            1
+        ));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
                 new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin),
@@ -87,9 +97,10 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin)
             },
             Color.RED,
-            viewport
-        );
-        faces[faces.length-5] = new Face(
+            viewport,
+            1
+        ));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
                 new Vector3(.5, -.5, .5).mul(tileSize).add(cubeOrigin),
@@ -97,9 +108,10 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(.5, .5, -.5).mul(tileSize).add(cubeOrigin)
             },
             Color.RED,
-            viewport
-        );
-        faces[faces.length-4] = new Face(
+            viewport,
+            1
+        ));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
                 new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
@@ -107,9 +119,10 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin)
             },
             Color.GREEN,
-            viewport
-        );
-        faces[faces.length-3] = new Face(
+            viewport,
+            1
+        ));
+        faces.add(new Face(
             new Vector3[] {
                 new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin),
                 new Vector3(.5, -.5, .5).mul(tileSize).add(cubeOrigin),
@@ -117,8 +130,45 @@ class Main extends JFrame implements KeyListener {
                 new Vector3(-.5, -.5, -.5).mul(tileSize).add(cubeOrigin)
             },
             Color.GREEN,
-            viewport
-        );
+            viewport,
+            1
+        ));
+        for (int i = 0; i < 360; i++)
+            faces.add(new Face(
+                new Vector3[] {
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
+                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 0).add(sphereOrigin0),
+                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 0).add(sphereOrigin0)
+                },
+                Color.RED,
+                viewport,
+                2
+            ));
+        for (int i = 0; i < 360; i++)
+            faces.add(new Face(
+                new Vector3[] {
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
+                    new Vector3(.05, -.05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1),
+                    new Vector3(-.05, -.05, .05).rotate(Math.toRadians(i), 1).add(sphereOrigin1)
+                },
+                Color.GREEN,
+                viewport,
+                3
+            ));
+        for (int i = 0; i < 360; i++)
+            faces.add(new Face(
+                new Vector3[] {
+                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
+                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
+                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 2).add(sphereOrigin2),
+                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 2).add(sphereOrigin2)
+                },
+                Color.BLUE,
+                viewport,
+                4
+            ));
         panel = new JPanel() {
             @Override
             public void paint(Graphics g) {
@@ -126,7 +176,7 @@ class Main extends JFrame implements KeyListener {
                 g2D.setColor(Color.BLACK);
                 g2D.fillRect(0, 0, getWidth(), getHeight());
                 // g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Face[] sorted = new Face[faces.length];
+                Face[] sorted = new Face[faces.size()];
                 for (Face face : faces) {
                     if (face == null) continue;
                     if (!face.displayable) continue;
@@ -239,15 +289,33 @@ class Main extends JFrame implements KeyListener {
         }
         double off = Math.sin(frame/(5.0-(velocity.Z/100)))*clamp(velocity.Z/15, -.01, .01);
         viewport.position.Y = height+off+Math.sin(frame/60.0)*.005*(Crouch?.75:1);
-        for (int i = 0; i < faces.length; i++)
-            if (faces[i] != null)
-                faces[i].update(viewport);
+        for (int i = 0; i < faces.size(); i++)
+            if (faces.get(i) != null)
+                faces.get(i).update(viewport);
         panel.repaint();
         frame_c++;
     }
 
     private double clamp(double val, double min, double max) {
         return val > max? max : val < min? min : val;
+    }
+
+    private void doGroupIDToggle() {
+        String response = JOptionPane.showInputDialog(null, "Enter Vertex/Face Group ID", "Group ID Toggle", JOptionPane.QUESTION_MESSAGE);
+        if (response == null)
+            JOptionPane.showMessageDialog(null, "Invalid input", "Group ID Toggle", JOptionPane.ERROR_MESSAGE);
+        else
+            try {
+                int id = Integer.parseInt(response);
+                if (hiddenGroupIDs.contains(id))
+                    hiddenGroupIDs.remove(hiddenGroupIDs.indexOf(id));
+                else
+                    hiddenGroupIDs.add(id);
+                for (Face face : faces)
+                    face.noDisplayableOverride = hiddenGroupIDs.contains(face.ID);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid input", "Group ID Toggle", JOptionPane.ERROR_MESSAGE);
+            }
     }
 
     public static void main(String[] args) {
@@ -266,6 +334,7 @@ class Main extends JFrame implements KeyListener {
             case KeyEvent.VK_Z: wireframe = !wireframe; break;
             case KeyEvent.VK_X: ghost = !ghost; break;
             case KeyEvent.VK_R: viewport = new Viewport(new Vector3(), new Vector3(), res, scalar); break;
+            case KeyEvent.VK_C: doGroupIDToggle(); break;
 
             case KeyEvent.VK_W: W = true; break;
             case KeyEvent.VK_A: A = true; break;

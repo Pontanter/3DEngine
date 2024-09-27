@@ -11,3 +11,4 @@
  * **F1** - **Toggle Debug mode (Might affect performance on lower-end devices.)**
  * **Z** - **Toggle wireframe rendering**
  * **X** - **Toggle transparent rendering (LAGGY)**
+ * **C** - **Open face toggle dialog** (Enter a number corresponding to a group ID to toggle it.)

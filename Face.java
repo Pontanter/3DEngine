@@ -4,9 +4,7 @@
 */
 
 import java.awt.Color;
-import java.awt.Image;
 import java.awt.Polygon;
-import java.awt.geom.AffineTransform;
 
 public class Face {
     public Polygon face;
@@ -17,25 +15,24 @@ public class Face {
     public Vector2[] verticies;
     public Vector3[] verticies3D;
 
-    public boolean isImage = false;
-    public Image image;
-    public Vector2[] imageVerticies;
-    public AffineTransform transform;
+    public int ID;
 
     public boolean displayable = true; /* rather than destroying the face, just hide it temporarily if obstructed. */
+    public boolean noDisplayableOverride = false;
 
     public static final int warpCorrection = 2; /* I have no clue what this does, or why I added it, but if I remove it everything breaks */
 
-    public Face(Vector3[] verticies, Color color, Viewport viewport) {
+    public Face(Vector3[] verticies, Color color, Viewport viewport, int ID) {
         this.color = color;
         this.verticies = new Vector2[verticies.length];
+        this.ID = ID;
         matColor = color;
         verticies3D = verticies;
         update(viewport);
     }
 
     public void update(Viewport viewport) {
-        if (isImage && image == null) {
+        if (noDisplayableOverride) {
             displayable = false;
             return;
         }
