@@ -196,9 +196,13 @@ class Main extends JFrame implements KeyListener {
                 g2D.fillRect(0, 0, getWidth(), getHeight());
                 // g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Face[] sorted = new Face[faces.size()];
+                int displayableFaces = 0;
+                int displayableVerticies = 0;
                 for (Face face : faces) {
                     if (face == null) continue;
                     if (!face.displayable) continue;
+                    displayableFaces++;
+                    displayableVerticies += face.verticies3D.length;
                     double distanceToCamera = Math.sqrt(
                         Math.pow(face.origin.X - viewport.position.X, 2) + 
                         Math.pow(face.origin.Y - viewport.position.Y, 2) + 
@@ -233,8 +237,10 @@ class Main extends JFrame implements KeyListener {
                         if (ghost)
                             g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
                     }
+                g2D.setColor(Color.WHITE);
+                g2D.setFont(new Font("Consolas", Font.PLAIN, 20));
+                g2D.drawString("FPS: "+FPS, 10, 30);
                 if (debug) {
-                    g2D.setColor(Color.WHITE);
                     for (Face face : sorted)
                         if (face != null) {
                             Vector2 origin = face.projectedOrigin;
@@ -242,8 +248,6 @@ class Main extends JFrame implements KeyListener {
                             for (Vector2 vertex : face.verticies)
                                 g2D.fillOval((int)vertex.X-s/2, (int)vertex.Y-s/2, s, s);
                         }
-                    g2D.setFont(new Font("Consolas", Font.PLAIN, 20));
-                    g2D.drawString("FPS: "+FPS, 10, 30);
                     g2D.drawString("Delta: "+delta, 10, 60);
                     g2D.drawString("Wireframe mode "+(wireframe?"on":"off"), 10, 90);
                     g2D.drawString("Ghost mode "+(ghost?"on":"off"), 10, 120);
@@ -251,6 +255,8 @@ class Main extends JFrame implements KeyListener {
                     g2D.drawString("Viewport rotation: "+viewport.rotation, 10, 180);
                     g2D.drawString("Viewport velocity: "+velocity, 10, 210);
                     g2D.drawString("Height: "+height, 10, 240);
+                    g2D.drawString("Visible faces: "+displayableFaces, 10, 270);
+                    g2D.drawString("Visible vertices: "+displayableVerticies, 10, 300);
                 }
                 g2D.dispose();
                 g.dispose();
