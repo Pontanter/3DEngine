@@ -11,6 +11,7 @@ public class Face {
     public Color color, matColor;
     public Vector3 origin;
     public Vector2 projectedOrigin;
+    public Mesh parentObject;
 
     public Vector2[] verticies;
     public Vector3[] verticies3D;
@@ -27,6 +28,11 @@ public class Face {
         matColor = color;
         verticies3D = verticies;
         update(viewport);
+    }
+
+    public Face(Vector3[] verticies, Color color, Viewport viewport, int ID, Mesh parentObject) {
+        this(verticies, color, viewport, ID);
+        this.parentObject = parentObject;
     }
 
     public void update(Viewport viewport) {

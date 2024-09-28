@@ -6,6 +6,7 @@ import javax.swing.JDialog;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -37,6 +38,8 @@ class Main extends JFrame implements KeyListener {
 
     private boolean W,A,S,D,RIGHT,LEFT,/*UP,DOWN,*/SHIFT;
     private boolean Crouch = false;
+
+    private String lookingAtName = "?";
     
     private ArrayList<Integer> hiddenGroupIDs = new ArrayList<Integer>();
     
@@ -53,10 +56,11 @@ class Main extends JFrame implements KeyListener {
         {
             Vector2 tileFloor = new Vector2(50, 50);
             double tileSize = .1;
-            Face[] floorFaces = new Face[(int) (tileFloor.X * tileFloor.Y)];
+            ArrayList<Face> floorFaces = new ArrayList<Face>();
+            Mesh Floor = new Mesh(new Face[0], "Floor");
             for (int y = 0; y < (int) tileFloor.Y; y++)
                 for (int x = 0; x < (int) tileFloor.X; x++)
-                    floorFaces[y * (int) tileFloor.X + x] = new Face(
+                    floorFaces.add(new Face(
                         new Vector3[] {
                             new Vector3(x*tileSize, 0, y*tileSize),
                             new Vector3(x*tileSize, 0, y*tileSize-tileSize),
@@ -65,9 +69,11 @@ class Main extends JFrame implements KeyListener {
                         }, 
                         new Color(255, 255, 255),
                         viewport,
-                        0
-                    );
-            meshes.add(new Mesh(floorFaces, "Floor"));
+                        1,
+                        Floor
+                    ));
+            Floor.faces = floorFaces;
+            meshes.add(Floor);
         }
         panel = new JPanel() {
             @Override
@@ -111,6 +117,20 @@ class Main extends JFrame implements KeyListener {
                         sorted[j] = sorted[j - 1];
                     sorted[i] = face;
                 }
+                {
+                    Face[] sorted2 = new Face[sorted.length];
+                    for (int i = 0; i < sorted.length; i++)
+                        sorted2[i] = sorted[(sorted.length - 1) - i];
+                    lookingAtName = "?";
+                    Point p = new Point((int) res.mul(.5).X, (int) res.mul(.5).Y);
+                    for (Face face : sorted2)
+                        if (face != null)
+                            if (face.displayable)
+                                if (face.face.contains(p)) {
+                                    lookingAtName = (face.parentObject == null? "N/A" : face.parentObject.name) + " [Group "+face.ID+"]";
+                                    break;
+                                }
+                }
                 for (Face face : sorted)
                     if (face != null) {
                         g2D.setColor(face.color);
@@ -124,6 +144,9 @@ class Main extends JFrame implements KeyListener {
                         if (ghost)
                             g2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1));
                     }
+                g2D.setColor(Color.GRAY);
+                g2D.setFont(new Font("Consolas", Font.PLAIN, 10));
+                g2D.drawString(lookingAtName, (int)res.mul(.5).X, (int)res.mul(.5).Y);
                 g2D.setColor(Color.WHITE);
                 g2D.setFont(new Font("Consolas", Font.PLAIN, 20));
                 g2D.drawString("FPS: "+FPS, 10, 30);
@@ -132,6 +155,13 @@ class Main extends JFrame implements KeyListener {
                         if (face != null)
                             for (Vector2 vertex : face.verticies)
                                 g2D.fillOval((int)vertex.X-s/2, (int)vertex.Y-s/2, s, s);
+                    int loadedVerticies=0, loadedFaces=0, loadedFaceVerticies=0;
+                    for (Mesh mesh : meshes) {
+                        loadedVerticies += mesh.verticies.size();
+                        loadedFaces += mesh.faces.size();
+                        for (Face face : mesh.faces)
+                            loadedFaceVerticies += face.verticies3D.length;
+                    }
                     g2D.drawString("Delta: "+delta, 10, 60);
                     g2D.drawString("Wireframe mode "+(wireframe?"on":"off"), 10, 90);
                     g2D.drawString("Ghost mode "+(ghost?"on":"off"), 10, 120);
@@ -141,6 +171,8 @@ class Main extends JFrame implements KeyListener {
                     g2D.drawString("Height: "+height, 10, 240);
                     g2D.drawString("Visible faces: "+displayableFaces, 10, 270);
                     g2D.drawString("Visible vertices: "+displayableVerticies, 10, 300);
+                    g2D.drawString("Loaded faces: "+loadedFaces, 10, 330);
+                    g2D.drawString("Loaded vertices: "+loadedVerticies+" ("+loadedFaceVerticies+")", 10, 360);
                 }
                 g2D.dispose();
                 g.dispose();
@@ -231,8 +263,12 @@ class Main extends JFrame implements KeyListener {
 
     private void importMesh() {
         String response = JOptionPane.showInputDialog(null, "Enter file path", "Import Mesh", JOptionPane.QUESTION_MESSAGE);
+        if (response == null) {
+            JOptionPane.showMessageDialog(null, "Invalid file path", "Import Mesh", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         File file = new File(response);
-        if (response == null || !file.exists() || file.isDirectory())
+        if (!file.exists() || file.isDirectory())
             JOptionPane.showMessageDialog(null, "Invalid file path", "Import Mesh", JOptionPane.ERROR_MESSAGE);
         else {
             JOptionPane optionPane = new JOptionPane("Loading"+response, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[] {}, null);

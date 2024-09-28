@@ -15,6 +15,7 @@ public class Mesh {
             ArrayList<Mesh> objects = new ArrayList<Mesh>();
             ArrayList<Vector3> currVerticies = new ArrayList<Vector3>();
             ArrayList<Face> currFaces = new ArrayList<Face>();
+            Mesh object = new Mesh(new Face[0], "");
             int byteRead;
             while ((byteRead = stream.read()) != -1) {
                 char c = (char) byteRead;
@@ -33,15 +34,25 @@ public class Mesh {
                             int index = Integer.parseInt(vertexInfo[0]) - 1;
                             faceVerticies[i] = currVerticies.get(index);
                         }
-                        currFaces.add(new Face(faceVerticies, color, viewport, ID));
+                        currFaces.add(new Face(faceVerticies, color, viewport, ID, object));
                     } else if (line.startsWith("o ")) {
-                        Mesh object = new Mesh(new Face[0], line.substring(2));
                         object.faces = currFaces;
                         object.verticies = currVerticies;
                         objects.add(object);
+                        ID++;
+                        currVerticies = new ArrayList<Vector3>();
+                        currFaces = new ArrayList<Face>();
+                        object = new Mesh(new Face[0], line.substring(2));
                     }
                 }
             }
+            stream.close();
+            object.faces = currFaces;
+            object.verticies = currVerticies;
+            objects.add(object);
+            for (int i = 0; i < objects.size(); i++)
+                if (objects.get(i).faces.size() == 0)
+                    objects.remove(i);
             return objects;
         } catch (Exception e) {
             System.out.println(e.getStackTrace());
