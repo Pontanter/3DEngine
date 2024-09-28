@@ -188,7 +188,7 @@ class Main extends JFrame implements KeyListener {
             velocity.Y + .001,
             velocity.Z * .75
         );
-        viewport.move(velocity.mul(.1).rotate(-viewport.rotation.Y, 1));
+        viewport.move(velocity.mul(.1).mul(timeScale).rotate(-viewport.rotation.Y, 1));
         H = H + ((Crouch?.15:.25) - H) *.1;
         height -= velocity.Y;
         if (height < H) {
