@@ -25,7 +25,7 @@ class Main extends JFrame implements KeyListener {
     private int FPS;
     private double delta;
 
-    private Vector2 res;
+    private Vector2 res = new Vector2(1920, 1080);
 
     private int scalar = 5;
 
