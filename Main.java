@@ -192,6 +192,7 @@ class Main extends JFrame implements KeyListener {
         setVisible(true);
 
         res = new Vector2(getWidth(), getHeight());
+        viewport.resolution = res;
 
         new Timer(1, e -> step()).start();
         new Timer(1000, e -> { FPS = frame_c; delta = 1.0/FPS; frame_c = 0; setTitle("3D Engine - "+FPS+" FPS"); }).start();
