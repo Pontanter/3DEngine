@@ -1,18 +1,20 @@
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
-import javax.swing.JOptionPane;
-import javax.swing.JDialog;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
 
 import java.io.File;
@@ -25,7 +27,7 @@ class Main extends JFrame implements KeyListener {
     private int FPS;
     private double delta;
 
-    private Vector2 res = new Vector2(1920, 1080);
+    private Vector2 res = new Vector2();
 
     private int scalar = 5;
 
@@ -179,20 +181,21 @@ class Main extends JFrame implements KeyListener {
             }
         };
 
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        res = new Vector2(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
+        viewport.resolution = res;
+
         add(panel);
         setUndecorated(true);
         pack();
         setTitle("3D Engine");
-        // setSize(res.toDimension());
+        setSize(res.toDimension());
         setResizable(false);
         addKeyListener(this);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setExtendedState(MAXIMIZED_BOTH);
         setVisible(true);
-
-        res = new Vector2(getWidth(), getHeight());
-        viewport.resolution = res;
 
         new Timer(1, e -> step()).start();
         new Timer(1000, e -> { FPS = frame_c; delta = 1.0/FPS; frame_c = 0; setTitle("3D Engine - "+FPS+" FPS"); }).start();

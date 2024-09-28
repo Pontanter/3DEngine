@@ -1,2 +1,2 @@
 exclude.*
-# this is just so testing files (e.g. high poly obj files for stress testing) won't be included, nothing important
+*.class
