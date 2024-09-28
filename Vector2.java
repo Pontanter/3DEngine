@@ -1,4 +1,5 @@
 import java.awt.Dimension;
+import java.awt.Point;
 
 public class Vector2 {
     public double X, Y;
@@ -25,6 +26,7 @@ public class Vector2 {
     }
     
     public Dimension toDimension() { return new Dimension((int)Math.round(X), (int)Math.round(Y)); }
+    public Point toPoint() { return new Point((int)Math.round(X), (int)Math.round(Y)); }
 
     @Override
     public String toString() { return String.format("Vector2(%.2f, %.2f)", X, Y); }

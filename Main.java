@@ -123,13 +123,13 @@ class Main extends JFrame implements KeyListener {
                         sorted2[i] = sorted[(sorted.length - 1) - i];
                     lookingAtName = "?";
                     Point p = new Point((int) res.mul(.5).X, (int) res.mul(.5).Y);
-                    for (Face face : sorted2)
-                        if (face != null)
-                            if (face.displayable)
-                                if (face.face.contains(p)) {
-                                    lookingAtName = (face.parentObject == null? "N/A" : face.parentObject.name) + " [Group "+face.ID+"]";
-                                    break;
-                                }
+                    for (int i = 0; i < sorted2.length; i++) {
+                        Face face = sorted2[i];
+                        if (face != null && face.displayable && face.face.contains(p)) {
+                            lookingAtName = (face.parentObject == null? "N/A" : face.parentObject.name) + " [Group "+face.ID+"]";
+                            break;
+                        }
+                    }
                 }
                 for (Face face : sorted)
                     if (face != null) {
@@ -267,11 +267,26 @@ class Main extends JFrame implements KeyListener {
             JOptionPane.showMessageDialog(null, "Invalid file path", "Import Mesh", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        response = response.trim();
+        if (response.equals("$getLoaded")) {
+            String list = "\n";
+            for (Mesh mesh : meshes)
+                list += mesh.name+"\n";
+            JOptionPane.showMessageDialog(null, "Loaded meshes;"+list, "Import Mesh", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        } else if (response.equals("$getAvailable")) {
+            String list = "\n";
+            for (String file : new File(".").list())
+                if (file.endsWith(".obj"))
+                    list += file+"\n";
+            JOptionPane.showMessageDialog(null, "Available OBJ files;"+list, "Import Mesh", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
         File file = new File(response);
         if (!file.exists() || file.isDirectory())
             JOptionPane.showMessageDialog(null, "Invalid file path", "Import Mesh", JOptionPane.ERROR_MESSAGE);
         else {
-            JOptionPane optionPane = new JOptionPane("Loading"+response, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[] {}, null);
+            JOptionPane optionPane = new JOptionPane("Loading"+response+"\nIf you're seeing this the importing may have gotten stuck, or you're uploading a large mesh.", JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, new Object[] {}, null);
             JDialog dialog = optionPane.createDialog("Import Mesh");
             dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             dialog.setModal(false);
