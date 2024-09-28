@@ -9,6 +9,7 @@ public class Vector3 {
     public Vector3 mul(double scalar) { return new Vector3(X * scalar, Y * scalar, Z * scalar); }
     public Vector3 div(double scalar) { return scalar == 0? mul(0) : new Vector3(X / scalar, Y / scalar, Z / scalar); }
 
+    public void set(Vector3 point) { X = point.X; Y = point.Y; Z = point.Z; }
     public double product() { return X*Y*Z; }
     public double magnitude() { return Math.sqrt(X * X + Y * Y + Z * Z); }
     public Vector2 project() { return Z == 0? new Vector2(X, Y) : new Vector2(X, Y).div(Z/50); }

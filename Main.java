@@ -14,8 +14,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 
-import java.time.Instant;
-
 import java.io.File;
 
 class Main extends JFrame implements KeyListener {
@@ -39,172 +37,38 @@ class Main extends JFrame implements KeyListener {
 
     private boolean W,A,S,D,RIGHT,LEFT,/*UP,DOWN,*/SHIFT;
     private boolean Crouch = false;
-
-    private Vector2 tileFloor = new Vector2(50, 50);
-    private ArrayList<Face> faces = new ArrayList<Face>();
-
-    private double tileSize = .1;
-
+    
     private ArrayList<Integer> hiddenGroupIDs = new ArrayList<Integer>();
-
+    
     private Vector3 velocity = new Vector3();
-    private Viewport viewport = new Viewport(new Vector3(tileSize*tileFloor.X*.5, 1, tileSize*tileFloor.Y*.5), new Vector3(), res, scalar);
-
-    private int loadedMeshes = 0;
-
+    private Viewport viewport = new Viewport(new Vector3(2.5, 1, 2.5), new Vector3(), res, scalar);
+    
+    private ArrayList<Mesh> meshes = new ArrayList<Mesh>();
+    
     private double leanZ;
     private double H = .25;
     private double height = H;
-
+    
     Main() {
-        double loadingStartTime = Instant.now().toEpochMilli();
-        System.out.println("Begin loading faces");
-        for (int y = 0; y < (int) tileFloor.Y; y++)
-            for (int x = 0; x < (int) tileFloor.X; x++)
-                faces.add(new Face(
-                    new Vector3[] {
-                        new Vector3(x*tileSize, 0, y*tileSize),
-                        new Vector3(x*tileSize, 0, y*tileSize-tileSize),
-                        new Vector3(x*tileSize-tileSize, 0, y*tileSize-tileSize),
-                        new Vector3(x*tileSize-tileSize, 0, y*tileSize)
-                    }, 
-                    new Color(255, 255, 255),
-                    viewport,
-                    0
-                ));
-        Vector3 cubeOrigin = new Vector3(tileSize*tileFloor.X*.5, .25, 0);
-        Vector3 cylinderOrigin0 = cubeOrigin.add(new Vector3(.25, 0, 0));
-        Vector3 cylinderOrigin1 = cylinderOrigin0.add(new Vector3(.25, 0, 0));
-        Vector3 cylinderOrigin2 = cylinderOrigin1.add(new Vector3(.25, 0, 0));
-        Vector3 sphereOrigin = cylinderOrigin2.add(new Vector3(.25, 0, 0));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.BLUE,
-            viewport,
-            1
-        ));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, .5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, -.5, -.5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.BLUE,
-            viewport,
-            1
-        ));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, -.5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.RED,
-            viewport,
-            1
-        ));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, .5, -.5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.RED,
-            viewport,
-            1
-        ));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(-.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, .5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, .5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, .5, -.5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.GREEN,
-            viewport,
-            1
-        ));
-        faces.add(new Face(
-            new Vector3[] {
-                new Vector3(-.5, -.5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, .5).mul(tileSize).add(cubeOrigin),
-                new Vector3(.5, -.5, -.5).mul(tileSize).add(cubeOrigin),
-                new Vector3(-.5, -.5, -.5).mul(tileSize).add(cubeOrigin)
-            },
-            Color.GREEN,
-            viewport,
-            1
-        ));
-        for (int i = 0; i < 360; i++)
-            faces.add(new Face(
-                new Vector3[] {
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
-                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0),
-                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 0).add(cylinderOrigin0)
-                },
-                Color.RED,
-                viewport,
-                2
-            ));
-        for (int i = 0; i < 360; i++)
-            faces.add(new Face(
-                new Vector3[] {
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
-                    new Vector3(.05, -.05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1),
-                    new Vector3(-.05, -.05, .05).rotate(Math.toRadians(i), 1).add(cylinderOrigin1)
-                },
-                Color.GREEN,
-                viewport,
-                3
-            ));
-        for (int i = 0; i < 360; i++)
-            faces.add(new Face(
-                new Vector3[] {
-                    new Vector3(-.05, .05, -.05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
-                    new Vector3(.05, .05, -.05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
-                    new Vector3(.05, .05, .05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2),
-                    new Vector3(-.05, .05, .05).rotate(Math.toRadians(i), 2).add(cylinderOrigin2)
-                },
-                Color.BLUE,
-                viewport,
-                4
-            ));
-        int sphereDecimate = 10;
-        for (int i = 0; i < 360; i+=sphereDecimate) {
-            Vector3[] verticies = new Vector3[360/sphereDecimate];
-            for (int j = 0; j < 360/sphereDecimate; j++)
-                verticies[j] = new Vector3(0, 0, .05).rotate(Math.toRadians(j*sphereDecimate), 1).rotate(Math.toRadians(i), 0).add(sphereOrigin);
-            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
+        {
+            Vector2 tileFloor = new Vector2(50, 50);
+            double tileSize = .1;
+            Face[] floorFaces = new Face[(int) (tileFloor.X * tileFloor.Y)];
+            for (int y = 0; y < (int) tileFloor.Y; y++)
+                for (int x = 0; x < (int) tileFloor.X; x++)
+                    floorFaces[y * (int) tileFloor.X + x] = new Face(
+                        new Vector3[] {
+                            new Vector3(x*tileSize, 0, y*tileSize),
+                            new Vector3(x*tileSize, 0, y*tileSize-tileSize),
+                            new Vector3(x*tileSize-tileSize, 0, y*tileSize-tileSize),
+                            new Vector3(x*tileSize-tileSize, 0, y*tileSize)
+                        }, 
+                        new Color(255, 255, 255),
+                        viewport,
+                        0
+                    );
+            meshes.add(new Mesh(floorFaces, "Floor"));
         }
-        for (int i = 0; i < 360; i+=sphereDecimate) {
-            Vector3[] verticies = new Vector3[360/sphereDecimate];
-            for (int j = 0; j < 360/sphereDecimate; j++)
-                verticies[j] = new Vector3(0, 0, .05).rotate(Math.toRadians(j*sphereDecimate), 1).rotate(Math.toRadians(i), 0).rotate(Math.PI/2, 1).add(sphereOrigin);
-            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
-        }
-        for (int i = 0; i < 360; i+=sphereDecimate) {
-            Vector3[] verticies = new Vector3[360/sphereDecimate];
-            for (int j = 0; j < 360/sphereDecimate; j++)
-                verticies[j] = new Vector3(0, .05, 0).rotate(Math.toRadians(j*sphereDecimate), 0).rotate(Math.toRadians(i), 1).add(sphereOrigin);
-            faces.add(new Face(verticies, Color.ORANGE, viewport, 5));
-        }
-        hiddenGroupIDs.add(5);
-        for (Face face : faces)
-            face.noDisplayableOverride = hiddenGroupIDs.contains(face.ID);
-        int totalVerticies = 0;
-        for (Face face : faces)
-            totalVerticies += face.verticies3D.length;
-        System.out.println("Successfully loaded "+faces.size()+" faces and "+totalVerticies+" vertices in "+(Instant.now().toEpochMilli()-loadingStartTime)+"ms");
         panel = new JPanel() {
             @Override
             public void paint(Graphics g) {
@@ -212,9 +76,15 @@ class Main extends JFrame implements KeyListener {
                 g2D.setColor(Color.BLACK);
                 g2D.fillRect(0, 0, getWidth(), getHeight());
                 // g2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Face[] sorted = new Face[faces.size()];
+                int tFaces = 0;
+                for (Mesh mesh : meshes)
+                    tFaces += mesh.faces.size();
+                Face[] sorted = new Face[tFaces];
                 int displayableFaces = 0;
                 int displayableVerticies = 0;
+                ArrayList<Face> faces = new ArrayList<Face>();
+                for (Mesh mesh : meshes)
+                    faces.addAll(mesh.faces);
                 for (Face face : faces) {
                     if (face == null) continue;
                     if (!face.displayable) continue;
@@ -328,9 +198,10 @@ class Main extends JFrame implements KeyListener {
         }
         double off = Math.sin(frame/(5.0-(velocity.Z/100)))*clamp(velocity.Z/15, -.01, .01);
         viewport.position.Y = height+off+Math.sin(frame/60.0)*.005*(Crouch?.75:1);
-        for (int i = 0; i < faces.size(); i++)
-            if (faces.get(i) != null)
-                faces.get(i).update(viewport);
+        for (Mesh mesh : meshes)
+            for (Face face : mesh.faces)
+                if (face != null)
+                    face.update(viewport);
         panel.repaint();
         frame_c++;
     }
@@ -350,8 +221,9 @@ class Main extends JFrame implements KeyListener {
                     hiddenGroupIDs.remove(hiddenGroupIDs.indexOf(id));
                 else
                     hiddenGroupIDs.add(id);
-                for (Face face : faces)
-                    face.noDisplayableOverride = hiddenGroupIDs.contains(face.ID);
+                for (Mesh mesh : meshes)
+                    for (Face face : mesh.faces)
+                        face.noDisplayableOverride = hiddenGroupIDs.contains(face.ID);
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(null, "Invalid input", "Group ID Toggle", JOptionPane.ERROR_MESSAGE);
             }
@@ -368,11 +240,18 @@ class Main extends JFrame implements KeyListener {
             dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             dialog.setModal(false);
             dialog.setVisible(true);
-            Mesh mesh = new Mesh(response, viewport.position, viewport.rotation, new Color(255, 255, 255), viewport, 6+loadedMeshes, .5);
-            loadedMeshes++;
-            for (Face face : mesh.faces)
-                faces.add(face);
-            System.out.println("Imported "+response+" to scene");
+            ArrayList<Mesh> objects = Mesh.importMesh(response, viewport.position, viewport.rotation.mul(-1).add(new Vector3(0, Math.PI, 0)), new Color(255, 255, 255), viewport, meshes.size()+1, .5);
+            meshes.addAll(objects);
+            String name = "{";
+            for (Mesh object : objects)
+                name += object.name+", ";
+            name += objects.size() > 0? "\b\b}" : '}';
+            int vertexCount = 0, faceCount = 0;
+            for (Mesh object : objects) {
+                vertexCount += object.verticies.size();
+                faceCount += object.faces.size();
+            }
+            System.out.println("Imported "+response+" with "+vertexCount+" Vertices and "+faceCount+" Faces as "+name+" to scene");
             dialog.dispose();
         }
     }
